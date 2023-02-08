@@ -1,0 +1,13 @@
+Author: ichitaso
+Maintainer: ichitaso
+Name: RegionChanger
+Package: com.ichitaso.regionchanger
+Depends: firmware (>= 15.0)
+Section: Utilities
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: Set the System Region of your device to US. Mute the shutter sound of the camera in silent mode, etc.
+Depiction: https://cydia.ichitaso.com/depiction/regionchanger.html
+Homepage: https://ichitaso.com/
+dev: ichitaso
+Icon: https://i.imgur.com/hYWPt18.png
