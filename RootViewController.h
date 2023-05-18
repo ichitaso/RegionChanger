@@ -12,10 +12,11 @@
 #import <SafariServices/SafariServices.h>
 #import "MobileGestalt.h"
 #import "Preferences.h"
+#import <rootless.h>
 
 #define LOGO_IMAGE @"CannatheaLogo"
 #define APPNAME @"RegionChanger"
-#define VERSION @"v0.0.1"
+#define VERSION @"v0.0.2"
 
 #define Notify_Preferences "com.ichitaso.regionchanger.alert"
 

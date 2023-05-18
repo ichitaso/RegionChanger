@@ -1,0 +1,11 @@
+#!/bin/bash
+
+DIR=/var/jb
+
+if [ -f ${DIR}/Applications/RegionChanger.app/RegionChanger ]; then
+    chmod 6755 ${DIR}/Applications/RegionChanger.app/RegionChanger
+else
+    chmod 6755 /Applications/RegionChanger.app/RegionChanger
+fi
+
+exit 0

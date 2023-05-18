@@ -40,7 +40,7 @@ void run_cmd(char *cmd) {
     pid_t pid;
     char *argv[] = {"sh", "-c", cmd, NULL};
     int status;
-    status = posix_spawn(&pid, "/bin/sh", NULL, NULL, (char* const*)argv, environ);
+    status = posix_spawn(&pid, ROOT_PATH("/bin/sh"), NULL, NULL, (char* const*)argv, environ);
 
     if (status == 0) {
         printf("Child pid: %i\n", pid);
@@ -263,17 +263,6 @@ void notifyAlertButtonCallBack () {
         [spec setProperty:@"Works only in jailbroken state." forKey:@"footerText"];
         [specifiers addObject:spec];
 
-        spec = [PSSpecifier preferenceSpecifierNamed:@"Reboot"
-                                              target:self
-                                                 set:nil
-                                                 get:nil
-                                              detail:nil
-                                                cell:PSButtonCell
-                                                edit:nil];
-        spec->action = @selector(tapReboot);
-        [spec setProperty:@"Reboot" forKey:@"key"];
-        [specifiers addObject:spec];
-
         spec = [PSSpecifier preferenceSpecifierNamed:@"UserSpace Reboot"
                                               target:self
                                                  set:nil
@@ -461,7 +450,7 @@ void notifyAlertButtonCallBack () {
         if (isEnable() && [manager fileExistsAtPath:BACKUP_PATH]) {
             alertController =
             [UIAlertController alertControllerWithTitle:@"Succes"
-                                                message:@"Reboot or ldrestart or userspace reboot is required to reflect this."
+                                                message:@"ldrestart or userspace reboot is required to reflect this."
                                          preferredStyle:UIAlertControllerStyleAlert];
 
             [alertController addAction:[UIAlertAction actionWithTitle:@"OK"
@@ -497,7 +486,7 @@ void notifyAlertButtonCallBack () {
         if (!isEnable() && ![manager fileExistsAtPath:BACKUP_PATH]) {
             alertController =
             [UIAlertController alertControllerWithTitle:@"Succes"
-                                                message:@"Reboot or ldrestart or userspace reboot is required to reflect this."
+                                                message:@"ldrestart or userspace reboot is required to reflect this."
                                          preferredStyle:UIAlertControllerStyleAlert];
 
             [alertController addAction:[UIAlertAction actionWithTitle:@"OK"
@@ -522,43 +511,6 @@ void notifyAlertButtonCallBack () {
     }
     // Reload
     [self reloadSpecifiers];
-}
-
-- (void)tapReboot {
-    if (getuid() != 0) {
-        setuid(0);
-    }
-
-    if (getuid() != 0) {
-        alertController =
-        [UIAlertController alertControllerWithTitle:@"You can not run"
-                                            message:@"Status: mobile"
-                                     preferredStyle:UIAlertControllerStyleAlert];
-
-        [alertController addAction:[UIAlertAction actionWithTitle:@"OK"
-                                                            style:UIAlertActionStyleDefault
-                                                          handler:^(UIAlertAction *action) {}]];
-
-        [self presentViewController:alertController animated:YES completion:nil];
-        // return
-        return;
-    }
-
-    alertController =
-    [UIAlertController alertControllerWithTitle:nil
-                                        message:@"Confirm Reboot"
-                                 preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Reboot"
-                                                        style:UIAlertActionStyleDestructive
-                                                      handler:^(UIAlertAction *action) {
-        run_cmd("kill 1");
-    }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel"
-                                                        style:UIAlertActionStyleDefault
-                                                      handler:^(UIAlertAction *action) {
-
-                                                      }]];
-    [self presentViewController:alertController animated:YES completion:nil];
 }
 
 - (void)tapLDRestart {
@@ -588,7 +540,7 @@ void notifyAlertButtonCallBack () {
     [alertController addAction:[UIAlertAction actionWithTitle:@"LDRestart"
                                                         style:UIAlertActionStyleDestructive
                                                       handler:^(UIAlertAction *action) {
-        run_cmd("/usr/bin/ldrestart");
+        run_cmd(ROOT_PATH("/usr/bin/ldrestart"));
     }]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel"
                                                         style:UIAlertActionStyleDefault
@@ -625,7 +577,7 @@ void notifyAlertButtonCallBack () {
     [alertController addAction:[UIAlertAction actionWithTitle:@"UserSpace Reboot"
                                                         style:UIAlertActionStyleDestructive
                                                       handler:^(UIAlertAction *action) {
-        if ([[NSFileManager defaultManager] fileExistsAtPath:@"/var/jb"]) {
+        if ([[NSFileManager defaultManager] fileExistsAtPath:@"/var/jb/bin/launchctl"]) {
             run_cmd("/var/jb/bin/launchctl reboot userspace");
         } else {
             run_cmd("/bin/launchctl reboot userspace");
@@ -709,16 +661,24 @@ void notifyAlertButtonCallBack () {
 }
 
 - (void)openURLInBrowser:(NSString *)url {
-    SFSafariViewControllerConfiguration *config = [[SFSafariViewControllerConfiguration alloc] init];
-    config.barCollapsingEnabled = NO;
-    SFSafariViewController *safari = [[SFSafariViewController alloc] initWithURL:[NSURL URLWithString:url] configuration:config];
-    if (@available(iOS 13.0, *)) {
-        [self presentViewController:safari animated:YES completion:nil];
-    } else {
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]
-                                           options:@{}
-                                 completionHandler:nil];
+    SFSafariViewController *safari = [[SFSafariViewController alloc] initWithURL:[NSURL URLWithString:url]];
+    [self presentViewController:safari animated:YES completion:nil];
+}
+#pragma mark - copy enabled
+- (BOOL)tableView:(UITableView *)tableView shouldShowMenuForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return YES;
+}
+- (BOOL)tableView:(UITableView *)tableView canPerformAction:(SEL)action forRowAtIndexPath:(NSIndexPath *)indexPath withSender:(id)sender
+{
+    return (action == @selector(copy:));
+}
+- (void)tableView:(UITableView *)tableView performAction:(SEL)action forRowAtIndexPath:(NSIndexPath *)indexPath withSender:(id)sender
+{
+    if (action == @selector(copy:)) {
+        UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+        UIPasteboard *pasteBoard = [UIPasteboard generalPasteboard];
+        [pasteBoard setString:cell.detailTextLabel.text ?: cell.textLabel.text];
     }
-
 }
 @end
